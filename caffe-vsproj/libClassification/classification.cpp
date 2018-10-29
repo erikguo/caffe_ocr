@@ -33,10 +33,11 @@ bool CheckFileExist(const char* szFile)
 }
 
 
-extern "C" EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, bool use_gpu)
+extern "C" EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, bool use_gpu, int gpu_no)
 {
 	Classifier* p = new Classifier();
-	if (!p->Init(model_folder, use_gpu))
+
+	if (!p->Init(model_folder, use_gpu, gpu_no))
 	{
 		delete p;
 		p = NULL;
@@ -46,7 +47,7 @@ extern "C" EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, b
 
 Classifier::Classifier(){  }
 
-bool Classifier::Init(const string& model_path, bool gpu_mode) {
+bool Classifier::Init(const string& model_path, bool gpu_mode, int gpu_no) {
 
 
 	const string trained_file = model_path + "/model.caffemodel";
@@ -60,8 +61,10 @@ bool Classifier::Init(const string& model_path, bool gpu_mode) {
 
 	if (!gpu_mode)
 		Caffe::set_mode(Caffe::CPU);
-	else
+	else {
+		Caffe::SetDevice(gpu_no);
 		Caffe::set_mode(Caffe::GPU);
+	}
 
 	/* Load the network. */
 	net_.reset(new Net<float>(model_file, TEST));

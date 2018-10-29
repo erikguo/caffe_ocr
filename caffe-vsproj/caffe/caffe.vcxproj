@@ -54,7 +54,7 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
   <ImportGroup Label="ExtensionSettings">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.props" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.props" />
   </ImportGroup>
   <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
@@ -74,8 +74,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\boost_1_57_0;F:\opencv\build\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\3rdparty\include\cudnn;..\..\src\caffe\proto;..\..\3rdparty\include\openblas;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\boost_1_57_0\stage\lib;F:\opencv\build\x64\vc14\staticlib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64;..\..\3rdparty\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>F:\boost_1_57_0;F:\opencv\build\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\3rdparty\include\cudnn;..\..\src\caffe\proto;..\..\3rdparty\include\openblas;$(IncludePath)</IncludePath>
+    <LibraryPath>F:\boost_1_57_0\stage\lib;F:\opencv\build\x64\vc14\staticlib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\lib\x64;..\..\3rdparty\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
     <OutDir>..\..\tools_bin\</OutDir>
     <TargetName>$(ProjectName)d</TargetName>
   </PropertyGroup>
@@ -84,8 +84,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>F:\boost_1_57_0;F:\opencv\build\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\3rdparty\include\cudnn;..\..\src\caffe\proto;..\..\3rdparty\include\openblas;$(IncludePath)</IncludePath>
-    <LibraryPath>F:\boost_1_57_0\stage\lib;F:\opencv\build\x64\vc14\staticlib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v8.0\lib\x64;..\..\3rdparty\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\boost_1_65_1;D:\opencv\build\include;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\src\caffe\proto;..\..\3rdparty\include\openblas;$(IncludePath)</IncludePath>
+    <LibraryPath>c:\boost_1_65_1\lib64-msvc-14.0;D:\opencv\build\x64\vc14\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\lib\x64;..\..\3rdparty\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
     <OutDir>..\..\tools_bin\</OutDir>
     <IgnoreImportLibrary>true</IgnoreImportLibrary>
   </PropertyGroup>
@@ -170,9 +170,10 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>opencv_core2410.lib;opencv_highgui2410.lib;opencv_imgproc2410.lib;opencv_flann2410.lib;opencv_nonfree2410.lib;opencv_legacy2410.lib;opencv_features2d2410.lib;libjpeg.lib;libpng.lib;zlib.lib;cudart.lib;cublas.lib;curand.lib;gflags.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;liblmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;comctl32.lib;cudnn.lib;libglog.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_world340.lib;zlib.lib;cudart.lib;cublas.lib;curand.lib;gflags.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;liblmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;comctl32.lib;cudnn.lib;libglog.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
+      <IgnoreSpecificDefaultLibraries>libboost_date_time-vc140-mt-1_57.lib;libboost_filesystem-vc140-mt-1_57.lib;libboost_system-vc140-mt-1_57.lib;libboost_thread-vc140-mt-1_57.lib;libboost_chrono-vc140-mt-1_57.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
     <CudaCompile>
       <CodeGeneration>compute_52,sm_52</CodeGeneration>
@@ -563,6 +564,6 @@
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
-    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 8.0.targets" />
+    <Import Project="$(VCTargetsPath)\BuildCustomizations\CUDA 9.1.targets" />
   </ImportGroup>
 </Project>

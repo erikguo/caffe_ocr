@@ -50,6 +50,7 @@ typedef std::pair<int, float> PredictionIdx;
 
 	virtual std::vector<std::string> GetLabels() = 0;
 
+	virtual int GetLabelSize() = 0;
 	virtual void SetMean(const std::string& mean_file) = 0;
 
 	virtual std::vector<float> Predict(const cv::Mat& img) = 0;
@@ -62,4 +63,32 @@ typedef std::pair<int, float> PredictionIdx;
 	virtual void Release()=0;
 };
 
- extern "C" EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, bool use_gpu);
+ typedef unsigned char byte;
+
+ extern "C" 
+ {
+	 EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, bool use_gpu, int gpu_no);
+	 EXPORT void ICNNPredict_GetLabels(ICNNPredict* pcnn, char** labelsbuf) {
+		 std::vector<std::string> labels = pcnn->GetLabels();
+		 for (int n = 0; n < labels.size(); n++) {
+			 labelsbuf[n] = new char[3];
+			 labelsbuf[n][2] = '\0';
+			 strncpy(labelsbuf[n], labels[n].c_str(), 2);
+		 } 
+	 }
+	 EXPORT int ICNNPredict_GetLabelSize(ICNNPredict* pcnn) { return pcnn->GetLabelSize(); }
+	 EXPORT void ICNNPredict_GetInputImageSize(ICNNPredict* pcnn, int &w, int &h) { pcnn->GetInputImageSize(w, h); }
+	 EXPORT int ICNNPredict_GetOutputFeatureMap(ICNNPredict* pcnn, int rows, int cols, int channels, byte* data, float *pred) {
+		 std::vector<int> outshape(4);
+		 int size[3] = {rows, cols, channels};
+		 const cv::Mat img = cv::Mat(rows, cols, CV_8UC3, data);
+		 std::vector<float> v_pred = pcnn->GetOutputFeatureMap(img, outshape);
+
+		 int num = v_pred.size();
+		 if (num > 0) {
+			 memcpy(pred, &v_pred[0], num * sizeof(float));
+		 }
+		 return num;
+	 }
+
+ }

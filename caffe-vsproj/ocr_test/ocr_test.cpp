@@ -1,6 +1,6 @@
 // ocr_test.cpp : 定义控制台应用程序的入口点。
 //
-
+#include <map>
 #include "stdafx.h"
 
 
@@ -250,10 +250,11 @@ void test_ocr_english(const string& imgfolder, const string& modelfolder, const 
 	bool usegpu = false;
 #else
 	bool usegpu = true;
+	int gpu_no = 0;
 #endif
 
 	//load model
-	ICNNPredict* pCNN = CreatePredictInstance(modelfolder.c_str(), usegpu);
+	ICNNPredict* pCNN = CreatePredictInstance(modelfolder.c_str(), usegpu, gpu_no);
 	int wstd = 0, hstd = 0;
 	pCNN->GetInputImageSize(wstd, hstd);
 
@@ -394,10 +395,11 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 	bool usegpu = false;
 #else
 	bool usegpu = true;
+	int gpu_no = 1;
 #endif
 
 	//load model
-	ICNNPredict* pCNN = CreatePredictInstance(modelfolder.c_str(), usegpu);
+	ICNNPredict* pCNN = CreatePredictInstance(modelfolder.c_str(), usegpu, gpu_no);
 	int wstd = 0, hstd = 0;
 	pCNN->GetInputImageSize(wstd, hstd);
 
@@ -410,6 +412,7 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 		idxBlank = (int)(it - alphabets.begin());
 
 
+/*
 	map<wchar_t, int> mapLabel2IDs;
 	for (size_t i = 0; i < alphabets.size(); i++)
 	{
@@ -421,6 +424,7 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 	}
 
 
+*/
 	int sumspend = 0;
 	int nok_lexicon = 0;
 	int nok_nolexicon = 0;
@@ -471,8 +475,8 @@ int main()
 	test_ocr_english(imgfolder, modelfolder, lexiconfile);
 
 #else
-	string imgfolder = "I:\\OCR_Line\\images_test_dataset\\";
-	string modelfolder = "I:\\OCR_Line\\crnn\\crnn_256\\";
+	string imgfolder = "D:\\caffe_ocr-master\\examples\\ocr";
+	string modelfolder = "D:\\caffe_ocr-master\\models\\densenet-no-blstm";
 	test_ocr_chinese(imgfolder, modelfolder);
 #endif
 }

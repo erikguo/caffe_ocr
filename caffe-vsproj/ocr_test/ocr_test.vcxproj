@@ -84,8 +84,8 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>F:\boost_1_57_0\stage\lib;F:\opencv\build\x64\vc14\staticlib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
-    <IncludePath>..\..\..\boost_1_57_0;F:\opencv\build\include;..\libClassification;..\..\include;$(IncludePath)</IncludePath>
+    <LibraryPath>c:\boost_1_65_1\lib64-msvc-14.0;d:\opencv\build\x64\vc14\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
+    <IncludePath>c:\boost_1_65_1;d:\opencv\build\include;..\libClassification;..\..\include;$(IncludePath)</IncludePath>
     <OutDir>..\..\tools_bin\</OutDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
@@ -147,7 +147,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>opencv_core2410.lib;opencv_highgui2410.lib;opencv_imgproc2410.lib;libjpeg.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opencv_world340.lib</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

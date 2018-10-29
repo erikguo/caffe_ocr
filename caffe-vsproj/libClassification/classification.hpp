@@ -22,7 +22,7 @@ class EXPORT Classifier : public ICNNPredict
 public:
 	Classifier();
 
-	bool Init(const string& model_path, bool gpu_mode = true);
+	bool Init(const string& model_path, bool gpu_mode = true, int gpu_no = 0);
 	bool Init(const string& trained_file, const string& model_file,
 		const string&mean_file, const string&label_file,
 		bool gpu_mode);
@@ -44,6 +44,7 @@ public:
 	std::vector<float> GetLayerFeatureMaps(const string& strLayerName, std::vector<int>& outshape);
 	int GetFeatureDim();
 	std::vector<std::string> GetLabels() { return labels_; }
+	int GetLabelSize() { return labels_.size(); }
 	std::vector< std::vector<float> > GetLastBlockFeature(const cv::Mat& img);
 	std::vector<float> GetOutputFeatureMap(const cv::Mat& img, std::vector<int>& outshape);
 	
