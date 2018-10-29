@@ -475,8 +475,8 @@ int main()
 	test_ocr_english(imgfolder, modelfolder, lexiconfile);
 
 #else
-	string imgfolder = "D:\\caffe_ocr-master\\examples\\ocr";
-	string modelfolder = "D:\\caffe_ocr-master\\models\\densenet-no-blstm";
+	string imgfolder = "D:\\caffe_ocr\\examples\\ocr";
+	string modelfolder = "D:\\caffe_ocr\\models\\densenet-no-blstm";
 	test_ocr_chinese(imgfolder, modelfolder);
 #endif
 }

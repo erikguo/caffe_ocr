@@ -87,7 +87,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>c:\boost_1_65_1;d:\opencv\build\include;D:\caffe_ocr-master\3rdparty\include\openblas;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\src\caffe\proto;$(IncludePath)</IncludePath>
+    <IncludePath>c:\boost_1_65_1;d:\opencv\build\include;..\..\3rdparty\include\openblas;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\include;..\..\3rdparty\include;..\..\include;..\..\3rdparty\include\lmdb;..\..\3rdparty\include\hdf5;..\..\src\;..\..\3rdparty\include\glog;..\..\src\caffe\proto;$(IncludePath)</IncludePath>
     <LibraryPath>C:\boost_1_65_1\lib64-msvc-14.0;d:\opencv\build\x64\vc14\lib;C:\Program Files\NVIDIA GPU Computing Toolkit\CUDA\v9.1\lib\x64;..\..\3rdparty\lib;..\..\tools_bin;$(LibraryPath)</LibraryPath>
     <OutDir>..\..\tools_bin\</OutDir>
   </PropertyGroup>
