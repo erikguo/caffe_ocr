@@ -9,12 +9,18 @@
 // #include <opencv2/imgproc/imgproc.hpp>
 
 #include "ICNNPredict.h"
+#include "bktree.h"
+#include "levenshtein.h"
+
+#include <ctcpp.h>
+#define NOMINMAX
+#include <windows.h>
 
 
 using namespace caffe;  // NOLINT(build/namespaces)
 using std::string;
 using std::ifstream;
-
+using std::wstring;
 
 
 class EXPORT Classifier : public ICNNPredict
@@ -67,11 +73,18 @@ public:
 	//∏– ‹“∞π¿º∆
 	cv::Mat EstimateReceptiveField(const cv::Mat& img, const string& layerName,int x,int y, int idxNeuron = -1, bool islstm = false, int* width_parts = 0);
 	void GetLayerFeatureMapSize(int w, int h, const std::string& layerName, int& w1, int& h1);
+
+	void InitLexicon(const char* lexicon_file = 0);
+	const char* GetOutputFeatureMapByLexicon(const cv::Mat& img);
+	
 private:
 	void Forward(const cv::Mat& img, const string& lastLayerName);
 	void BatchForward(const vector<cv::Mat>& imgs, const string& lastLayerName);
 	void PrepareInput(const cv::Mat& img);
 	void PrepareBatchInputs(const vector<cv::Mat>& imgs);
+	float GetCTCLoss(float*activations, int timesteps, int alphabet_size, int blank_index_,
+		const string& strlabel, const map<wchar_t, int>& mapLabel2Idx);
+
 private:
 	std::shared_ptr<Net<float> > net_;
 	cv::Size input_geometry_;
@@ -84,6 +97,10 @@ private:
 
 	int FindMaxChannelLayer();
 	int FindLayerIndex(const string& strLayerName);
+
+	BKTree* pBKtree;
+	int idxBlank = 0;
+	map<wchar_t, int> mapLabel2IDs;
 };
 
 

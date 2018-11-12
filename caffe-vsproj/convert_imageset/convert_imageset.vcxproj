@@ -135,7 +135,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>USE_LMDB;USE_OPENCV;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>USE_LEVELDB;USE_LMDB;USE_OPENCV;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -143,6 +143,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>opencv_world340.lib;zlib.lib;cudart.lib;cublas.lib;curand.lib;gflags.lib;libopenblas.dll.a;libprotobuf.lib;libprotoc.lib;leveldb.lib;liblmdb.lib;hdf5.lib;hdf5_hl.lib;Shlwapi.lib;comctl32.lib;cudnn.lib;libglog.lib;ntdll.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <IgnoreSpecificDefaultLibraries>libboost_date_time-vc140-mt-1_57.lib;libboost_filesystem-vc140-mt-1_57.lib;libboost_system-vc140-mt-1_57.lib;libboost_thread-vc140-mt-1_57.lib;libboost_chrono-vc140-mt-1_57.lib;%(IgnoreSpecificDefaultLibraries)</IgnoreSpecificDefaultLibraries>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>

@@ -61,6 +61,9 @@ typedef std::pair<int, float> PredictionIdx;
 	virtual cv::Mat EstimateReceptiveField(const cv::Mat& img, const std::string& layerName, int x, int y, int idxNeuron = -1,bool islstm=false,int* width_parts=0) = 0;
 	virtual void GetLayerFeatureMapSize(int w, int h, const std::string& layerName,int& w1, int& h1)=0;
 	virtual void Release()=0;
+
+	virtual void InitLexicon(const char* lexicon_file = 0) = 0;
+	virtual const char* GetOutputFeatureMapByLexicon(const cv::Mat& img) = 0;
 };
 
  typedef unsigned char byte;
@@ -68,6 +71,9 @@ typedef std::pair<int, float> PredictionIdx;
  extern "C" 
  {
 	 EXPORT ICNNPredict* CreatePredictInstance(const char* model_folder, bool use_gpu, int gpu_no);
+	 EXPORT void ICNNPredict_InitLexicon(ICNNPredict* pcnn, const char* lexicon_file) {
+		 pcnn->InitLexicon(lexicon_file);
+	 }
 	 EXPORT void ICNNPredict_GetLabels(ICNNPredict* pcnn, char** labelsbuf) {
 		 std::vector<std::string> labels = pcnn->GetLabels();
 		 for (int n = 0; n < labels.size(); n++) {
@@ -90,5 +96,11 @@ typedef std::pair<int, float> PredictionIdx;
 		 }
 		 return num;
 	 }
+	 EXPORT const char* ICNNPredict_GetOutputFeatureMapByLexicon(ICNNPredict* pcnn, int rows, int cols, int channels, byte* data) {
+		 int size[3] = { rows, cols, channels };
+		 const cv::Mat img = cv::Mat(rows, cols, CV_8UC3, data);
+		 const char* v_pred = pcnn->GetOutputFeatureMapByLexicon(img);
 
+		 return v_pred;
+	 }
  }
