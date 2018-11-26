@@ -62,8 +62,8 @@ typedef std::pair<int, float> PredictionIdx;
 	virtual void GetLayerFeatureMapSize(int w, int h, const std::string& layerName,int& w1, int& h1)=0;
 	virtual void Release()=0;
 
-	virtual void InitLexicon(const char* lexicon_file = 0) = 0;
-	virtual const char* GetOutputFeatureMapByLexicon(const cv::Mat& img) = 0;
+	virtual void InitLexicon(const char* lexicon_file = 0, bool is_wcs = false) = 0;
+	virtual const char* GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is_wcs = false) = 0;
 };
 
  typedef unsigned char byte;

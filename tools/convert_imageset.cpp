@@ -40,7 +40,7 @@ using boost::scoped_ptr;
 
 DEFINE_bool(gray, false,
     "When this option is on, treat images as grayscale ones");
-DEFINE_bool(shuffle, true,
+DEFINE_bool(shuffle, false,
     "Randomly shuffle the order of images and their labels");
 DEFINE_string(backend, "leveldb",
         "The backend {lmdb, leveldb} for storing the result");

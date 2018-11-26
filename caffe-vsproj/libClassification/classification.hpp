@@ -74,8 +74,8 @@ public:
 	cv::Mat EstimateReceptiveField(const cv::Mat& img, const string& layerName,int x,int y, int idxNeuron = -1, bool islstm = false, int* width_parts = 0);
 	void GetLayerFeatureMapSize(int w, int h, const std::string& layerName, int& w1, int& h1);
 
-	void InitLexicon(const char* lexicon_file = 0);
-	const char* GetOutputFeatureMapByLexicon(const cv::Mat& img);
+	void InitLexicon(const char* lexicon_file = 0, bool is_wcs = false);
+	const char* GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is_wcs=false);
 	
 private:
 	void Forward(const cv::Mat& img, const string& lastLayerName);
@@ -84,6 +84,8 @@ private:
 	void PrepareBatchInputs(const vector<cv::Mat>& imgs);
 	float GetCTCLoss(float*activations, int timesteps, int alphabet_size, int blank_index_,
 		const string& strlabel, const map<wchar_t, int>& mapLabel2Idx);
+	float GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
+		const wstring& strlabel, const map<wchar_t, int>& mapLabel2Idx);
 
 private:
 	std::shared_ptr<Net<float> > net_;

@@ -1038,9 +1038,31 @@ std::wstring string2wstring(const string& str, bool bSrcIsUTF8 = true)
 	return wstr;
 }
 
+std::string wstring2string(const wstring& str, bool bSrcIsUTF8 = true)
+{
+	UINT srcCode = bSrcIsUTF8 ? CP_UTF8 : CP_ACP;
+	int nLen = WideCharToMultiByte(srcCode, 0, str.c_str(), -1, NULL, 0, NULL, NULL);
 
-void Classifier::InitLexicon(const char* lexicon_file) {
-	pBKtree = bktree_new(levenshtein_distance);
+	if (nLen <= 0) return std::string("");
+
+	char* pszDst = new char[nLen];
+	if (NULL == pszDst) return std::string("");
+
+	WideCharToMultiByte(srcCode, 0, str.c_str(), -1, pszDst, nLen, NULL, NULL);
+	pszDst[nLen - 1] = 0;
+
+	std::string strTemp(pszDst);
+	delete[] pszDst;
+
+	return strTemp;
+}
+
+void Classifier::InitLexicon(const char* lexicon_file, bool is_wcs) {
+
+	if (is_wcs) 
+		pBKtree = bktree_new_wcs(levenshtein_distance_wcs);
+	else
+		pBKtree = bktree_new(levenshtein_distance);
 
 	ifstream fslexicon(lexicon_file);
 
@@ -1052,18 +1074,17 @@ void Classifier::InitLexicon(const char* lexicon_file) {
 		if (line.size() == 0)
 			continue;
 		//if(line[line.size()-1]=='\t')
-		bktree_add(pBKtree, const_cast<char*>(line.c_str()), line.size());
+		if (is_wcs) {
+			wstring line_wcs = string2wstring(line, true);
+			bktree_add_wcs(pBKtree, const_cast<wchar_t*>(line_wcs.c_str()), line_wcs.size());
+		}
+		else
+			bktree_add(pBKtree, const_cast<char*>(line.c_str()), line.size());
 		n++;
 	}
-
-
-	int wstd = 0, hstd = 0;
-	GetInputImageSize(wstd, hstd);
-
 	//get alphabet
 	vector<string> alphabets = GetLabels();
 
-	int idxBlank = 0;
 	vector<string>::const_iterator it = find(alphabets.begin(), alphabets.end(), "blank");
 	if (it != alphabets.end())
 		idxBlank = (int)(it - alphabets.begin());
@@ -1139,14 +1160,65 @@ float Classifier::GetCTCLoss(float*activations, int timesteps, int alphabet_size
 	return cost;
 }
 
+float Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
+	const wstring& strlabel, const map<wchar_t, int>& mapLabel2Idx)
+{
+	size_t workspace_alloc_bytes_;
 
-const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img) {
+	ctcOptions options;
+	options.loc = CTC_CPU;
+	options.num_threads = 8;
+	options.blank_label = blank_index_;
+
+	int len = strlabel.size();
+	ctcStatus_t status = CTC::get_workspace_size<float>(&len,
+		&timesteps,
+		alphabet_size,
+		1,
+		options,
+		&workspace_alloc_bytes_);
+	//CHECK_EQ(status, CTC_STATUS_SUCCESS) << "CTC Error: " << ctcGetStatusString(status);
+	vector<float> workspace_(workspace_alloc_bytes_);
+
+	vector<int> flat_labels;
+	for (size_t i = 0; i < strlabel.size(); i++)
+	{
+		map<wchar_t, int>::const_iterator it = mapLabel2Idx.find(strlabel[i]);
+		if (it != mapLabel2Idx.end())
+			flat_labels.push_back(it->second);
+	}
+	if (flat_labels.size() != strlabel.size())
+		return 0;
+	float cost = 0;
+	status = CTC::compute_ctc_loss_cpu<float>(activations,
+		0,
+		flat_labels.data(),
+		&len,
+		&timesteps,
+		alphabet_size,
+		1,
+		&cost,
+		workspace_.data(),
+		options
+		);
+	return cost;
+}
+
+
+const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is_wcs) {
 	vector<int> outshape;
 	vector<float> pred = GetOutputFeatureMap(img, outshape);
 	string strpredict0 = GetPredictString(pred, idxBlank, labels_);
-
-	int dist = std::min(2, (int)strpredict0.size() / 3);
-	vector< BKResult> ress = bktree_query(pBKtree, const_cast<char*>(strpredict0.c_str()), strpredict0.size(), dist);
+	vector< BKResult> ress;
+	if (is_wcs) {
+		wstring strpredict0_wcs = string2wstring(strpredict0, true);
+		int dist = std::min(2, (int)strpredict0_wcs.size()>>1);
+		ress = bktree_query_wcs(pBKtree, const_cast<wchar_t*>(strpredict0_wcs.c_str()), strpredict0_wcs.size(), dist);
+	}
+	else {
+		int dist = std::min(2, (int)strpredict0.size() / 3);
+		ress = bktree_query(pBKtree, const_cast<char*>(strpredict0.c_str()), strpredict0.size(), dist);
+	}
 
 	float min_ctc_loss = 1000;
 	vector<float> activitas = GetLayerFeatureMaps("fc1x", outshape);;
@@ -1154,7 +1226,14 @@ const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img) {
 	int min_ctc_idx = -1;
 	for (size_t j = 0; j < ress.size(); j++)
 	{
-		float ctcloss = GetCTCLoss(activitas.data(), timesteps, labels_.size(), idxBlank, ress[j].str, mapLabel2IDs);
+		float ctcloss;
+		if (is_wcs) {
+			ctcloss = GetCTCLoss_wcs(activitas.data(), timesteps, labels_.size(), idxBlank, ress[j].str_wcs, mapLabel2IDs);
+		}
+		else {
+			ctcloss = GetCTCLoss(activitas.data(), timesteps, labels_.size(), idxBlank, ress[j].str, mapLabel2IDs);
+		}
+
 #ifdef _DEBUG
 		printf("%s, ctc loss=%f\n", ress[j].str.c_str(), ctcloss);
 #endif
@@ -1166,8 +1245,13 @@ const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img) {
 	}
 
 	if (ress.size() > 0 && min_ctc_idx >= 0) {
-		printf("\tdic result: %s\n", ress[min_ctc_idx].str.c_str());
-		return ress[min_ctc_idx].str.c_str();
+		if (is_wcs) {
+			return wstring2string(ress[min_ctc_idx].str_wcs).c_str();
+		}
+		else {
+			printf("\tdic result: %s\n", ress[min_ctc_idx].str);
+			return ress[min_ctc_idx].str.c_str();
+		}
 	} else
 		return "";
 }

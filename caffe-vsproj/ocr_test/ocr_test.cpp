@@ -8,6 +8,9 @@
 #include "public.h"
 
 #include "ICNNPredict.h"
+#include "bktree.h"
+#include "levenshtein.h"
+
 
 //#define CPU_ONLY
 
@@ -27,8 +30,6 @@
 #endif
 #endif
 
-#include "bktree.h"
-#include "levenshtein.h"
 
 #include <time.h>
 #include <string>
@@ -244,6 +245,9 @@ float GetCTCLoss(float*activations, int timesteps, int alphabet_size, int blank_
 	return cost;
 }
 
+
+/*
+
 void test_ocr_english(const string& imgfolder, const string& modelfolder, const string& lexiconfile)
 {
 #ifdef CPU_ONLY
@@ -387,9 +391,9 @@ void test_ocr_english(const string& imgfolder, const string& modelfolder, const 
 	bktree_destroy(pBKtree);
 
 }
+*/
 
-
-void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
+void test_ocr_chinese(const string& imgfolder, const string& modelfolder, const string& lexiconfile)
 {
 #ifdef CPU_ONLY
 	bool usegpu = false;
@@ -400,7 +404,10 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 
 	//load model
 	ICNNPredict* pCNN = CreatePredictInstance(modelfolder.c_str(), usegpu, gpu_no);
-	int wstd = 0, hstd = 0;
+	pCNN->InitLexicon(lexiconfile.c_str(), true);
+	printf("finish to init lexicon ++++++++++++++++++++++++++++++++++\n");
+
+/*	int wstd = 0, hstd = 0;
 	pCNN->GetInputImageSize(wstd, hstd);
 
 	//get alphabet
@@ -410,7 +417,7 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 	vector<string>::const_iterator it = find(alphabets.begin(), alphabets.end(), "blank");
 	if (it != alphabets.end())
 		idxBlank = (int)(it - alphabets.begin());
-
+*/
 
 /*
 	map<wchar_t, int> mapLabel2IDs;
@@ -436,6 +443,9 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 	{
 		string imgfile = imgs[i];
 		cv::Mat img = cv::imread(imgfile, CV_LOAD_IMAGE_COLOR);
+		string strpredict0 = pCNN->GetOutputFeatureMapByLexicon(img, true);
+
+/*
 		int w = img.cols, h = img.rows;
 		if (2 * w <= h)
 		{
@@ -458,6 +468,7 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder)
 		sumspend += (end - start);
 
 		string strpredict0 = GetPredictString(pred, idxBlank, alphabets);
+*/
 
 		printf("[%d/%d]%s: %s\n", i + 1, imgs.size(), imgs[i].c_str(), strpredict0.c_str());
 
@@ -475,9 +486,10 @@ int main()
 	test_ocr_english(imgfolder, modelfolder, lexiconfile);
 
 #else
-	string imgfolder = "D:\\caffe_ocr\\examples\\ocr";
-	string modelfolder = "D:\\caffe_ocr\\models\\densenet-no-blstm";
-	test_ocr_chinese(imgfolder, modelfolder);
+	string imgfolder = "D:\\userdata\\namestrs\\train_data\\";
+	string modelfolder = "D:\\userdata\\namestrs\\model";
+	string lexiconfile = "D:\\userdata\\namestrs\\model\\lexicon.txt";
+	test_ocr_chinese(imgfolder, modelfolder, lexiconfile);
 #endif
 }
 
