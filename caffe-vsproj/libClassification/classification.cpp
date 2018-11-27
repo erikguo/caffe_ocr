@@ -1049,7 +1049,7 @@ std::string wstring2string(const wstring& str, bool bSrcIsUTF8 = true)
 	if (NULL == pszDst) return std::string("");
 
 	WideCharToMultiByte(srcCode, 0, str.c_str(), -1, pszDst, nLen, NULL, NULL);
-	pszDst[nLen - 1] = 0;
+//	pszDst[nLen - 1] = 0;
 
 	std::string strTemp(pszDst);
 	delete[] pszDst;
@@ -1058,7 +1058,7 @@ std::string wstring2string(const wstring& str, bool bSrcIsUTF8 = true)
 }
 
 void Classifier::InitLexicon(const char* lexicon_file, bool is_wcs) {
-
+	is_wcs_ = is_wcs;
 	if (is_wcs) 
 		pBKtree = bktree_new_wcs(levenshtein_distance_wcs);
 	else
@@ -1097,7 +1097,6 @@ void Classifier::InitLexicon(const char* lexicon_file, bool is_wcs) {
 		wstring wlabel = string2wstring(alphabets[i], true);
 		mapLabel2IDs.insert(make_pair(wlabel[0], i));
 	}
-
 }
 
 
@@ -1160,59 +1159,93 @@ float Classifier::GetCTCLoss(float*activations, int timesteps, int alphabet_size
 	return cost;
 }
 
-float Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
-	const wstring& strlabel, const map<wchar_t, int>& mapLabel2Idx)
+string Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
+	vector< BKResult> ress, const map<wchar_t, int>& mapLabel2Idx, bool is_wcs)
 {
+	printf("======================waiting list len: %d ===============\n", ress.size());
+	vector<int> flat_labels;
+	vector<int> lens;
+	for (size_t i = 0; i < ress.size(); i++)
+	{
+		if (is_wcs) {
+			wstring strlabel = ress[i].str_wcs;
+			for (size_t k = 0; k < strlabel.size(); k++) {
+				map<wchar_t, int>::const_iterator it = mapLabel2Idx.find(strlabel[k]);
+				if (it != mapLabel2Idx.end())
+					flat_labels.push_back(it->second);
+			}
+			lens.push_back(strlabel.size());
+		}
+		else {
+			string strlabel = ress[i].str;
+			for (size_t k = 0; k < strlabel.size(); k++) {
+				map<wchar_t, int>::const_iterator it = mapLabel2Idx.find(strlabel[k]);
+				if (it != mapLabel2Idx.end())
+					flat_labels.push_back(it->second);
+			}
+			lens.push_back(strlabel.size());
+		}
+	}
+	
+
 	size_t workspace_alloc_bytes_;
 
 	ctcOptions options;
 	options.loc = CTC_CPU;
-	options.num_threads = 8;
+	options.num_threads = -1;
 	options.blank_label = blank_index_;
+	vector<int> input_lens(ress.size(), timesteps);
 
-	int len = strlabel.size();
-	ctcStatus_t status = CTC::get_workspace_size<float>(&len,
-		&timesteps,
+	ctcStatus_t status = CTC::get_workspace_size<float>(lens.data(),
+		input_lens.data(),
 		alphabet_size,
-		1,
+		lens.size(),
 		options,
 		&workspace_alloc_bytes_);
 	//CHECK_EQ(status, CTC_STATUS_SUCCESS) << "CTC Error: " << ctcGetStatusString(status);
 	vector<float> workspace_(workspace_alloc_bytes_);
 
-	vector<int> flat_labels;
-	for (size_t i = 0; i < strlabel.size(); i++)
-	{
-		map<wchar_t, int>::const_iterator it = mapLabel2Idx.find(strlabel[i]);
-		if (it != mapLabel2Idx.end())
-			flat_labels.push_back(it->second);
-	}
-	if (flat_labels.size() != strlabel.size())
-		return 0;
-	float cost = 0;
+	
+	float* costs = new float[lens.size()];
 	status = CTC::compute_ctc_loss_cpu<float>(activations,
 		0,
 		flat_labels.data(),
-		&len,
-		&timesteps,
+		lens.data(),
+		input_lens.data(),
 		alphabet_size,
-		1,
-		&cost,
+		lens.size(),
+		costs,
 		workspace_.data(),
 		options
 		);
-	return cost;
+	float min_ctc_loss = 1000;
+	int min_ctc_idx = -1;
+	for (size_t i = 0; i < lens.size(); i++) {
+		if (costs[i] < min_ctc_loss)
+		{
+			min_ctc_loss = costs[i];
+			min_ctc_idx = (int)i;
+		}
+	}
+	if (ress.size() > 0 && min_ctc_idx >= 0) {
+		if (is_wcs)
+			return wstring2string(ress[min_ctc_idx].str_wcs);
+		else
+			return ress[min_ctc_idx].str;
+	}
+	else
+		return "";
 }
 
 
-const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is_wcs) {
+string Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img) {
 	vector<int> outshape;
 	vector<float> pred = GetOutputFeatureMap(img, outshape);
 	string strpredict0 = GetPredictString(pred, idxBlank, labels_);
 	vector< BKResult> ress;
-	if (is_wcs) {
+	if (is_wcs_) {
 		wstring strpredict0_wcs = string2wstring(strpredict0, true);
-		int dist = std::min(2, (int)strpredict0_wcs.size()>>1);
+		int dist = std::min(2, (int)strpredict0_wcs.size() >> 1);
 		ress = bktree_query_wcs(pBKtree, const_cast<wchar_t*>(strpredict0_wcs.c_str()), strpredict0_wcs.size(), dist);
 	}
 	else {
@@ -1221,37 +1254,14 @@ const char* Classifier::GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is
 	}
 
 	float min_ctc_loss = 1000;
-	vector<float> activitas = GetLayerFeatureMaps("fc1x", outshape);;
-	int timesteps = outshape[0];
-	int min_ctc_idx = -1;
-	for (size_t j = 0; j < ress.size(); j++)
-	{
-		float ctcloss;
-		if (is_wcs) {
-			ctcloss = GetCTCLoss_wcs(activitas.data(), timesteps, labels_.size(), idxBlank, ress[j].str_wcs, mapLabel2IDs);
-		}
-		else {
-			ctcloss = GetCTCLoss(activitas.data(), timesteps, labels_.size(), idxBlank, ress[j].str, mapLabel2IDs);
-		}
-
-#ifdef _DEBUG
-		printf("%s, ctc loss=%f\n", ress[j].str.c_str(), ctcloss);
-#endif
-		if (ctcloss < min_ctc_loss)
-		{
-			min_ctc_loss = ctcloss;
-			min_ctc_idx = (int)j;
-		}
+	vector<float> activitas = GetLayerFeatureMaps("fc1x", outshape);
+	// 构造一个minibatch
+	vector<float> activitas_set;
+	for (size_t i = 0; i < ress.size(); i++) {
+		activitas_set.insert(activitas_set.end(), activitas.begin(), activitas.end());
 	}
 
-	if (ress.size() > 0 && min_ctc_idx >= 0) {
-		if (is_wcs) {
-			return wstring2string(ress[min_ctc_idx].str_wcs).c_str();
-		}
-		else {
-			printf("\tdic result: %s\n", ress[min_ctc_idx].str);
-			return ress[min_ctc_idx].str.c_str();
-		}
-	} else
-		return "";
+	int timesteps = outshape[0];
+
+	return GetCTCLoss_wcs(activitas_set.data(), timesteps, labels_.size(), idxBlank, ress, mapLabel2IDs, is_wcs_);
 }

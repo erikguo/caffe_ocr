@@ -443,7 +443,7 @@ void test_ocr_chinese(const string& imgfolder, const string& modelfolder, const 
 	{
 		string imgfile = imgs[i];
 		cv::Mat img = cv::imread(imgfile, CV_LOAD_IMAGE_COLOR);
-		string strpredict0 = pCNN->GetOutputFeatureMapByLexicon(img, true);
+		string strpredict0 = pCNN->GetOutputFeatureMapByLexicon(img);
 
 /*
 		int w = img.cols, h = img.rows;

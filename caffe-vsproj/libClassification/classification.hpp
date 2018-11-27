@@ -75,7 +75,7 @@ public:
 	void GetLayerFeatureMapSize(int w, int h, const std::string& layerName, int& w1, int& h1);
 
 	void InitLexicon(const char* lexicon_file = 0, bool is_wcs = false);
-	const char* GetOutputFeatureMapByLexicon(const cv::Mat& img, bool is_wcs=false);
+	string GetOutputFeatureMapByLexicon(const cv::Mat& img);
 	
 private:
 	void Forward(const cv::Mat& img, const string& lastLayerName);
@@ -84,8 +84,8 @@ private:
 	void PrepareBatchInputs(const vector<cv::Mat>& imgs);
 	float GetCTCLoss(float*activations, int timesteps, int alphabet_size, int blank_index_,
 		const string& strlabel, const map<wchar_t, int>& mapLabel2Idx);
-	float GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
-		const wstring& strlabel, const map<wchar_t, int>& mapLabel2Idx);
+	string GetCTCLoss_wcs(float*activations, int timesteps, int alphabet_size, int blank_index_,
+		vector< BKResult> ress, const map<wchar_t, int>& mapLabel2Idx, bool is_wcs);
 
 private:
 	std::shared_ptr<Net<float> > net_;
@@ -103,6 +103,8 @@ private:
 	BKTree* pBKtree;
 	int idxBlank = 0;
 	map<wchar_t, int> mapLabel2IDs;
+
+	bool is_wcs_ = false;
 };
 
 
