@@ -105,6 +105,7 @@ private:
 	map<wchar_t, int> mapLabel2IDs;
 
 	bool is_wcs_ = false;
+	shared_ptr<SyncedMemory> workspace_;
 };
 
 

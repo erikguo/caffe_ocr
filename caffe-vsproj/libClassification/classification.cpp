@@ -1187,14 +1187,16 @@ string Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet
 		}
 	}
 	
-
 	size_t workspace_alloc_bytes_;
 
 	ctcOptions options;
-	options.loc = CTC_CPU;
-	options.num_threads = -1;
 	options.blank_label = blank_index_;
 	vector<int> input_lens(ress.size(), timesteps);
+	vector<float> costs(lens.size());
+
+#ifdef CPU_ONLY
+	options.loc = CTC_CPU;
+	options.num_threads = -1;
 
 	ctcStatus_t status = CTC::get_workspace_size<float>(lens.data(),
 		input_lens.data(),
@@ -1203,10 +1205,9 @@ string Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet
 		options,
 		&workspace_alloc_bytes_);
 	//CHECK_EQ(status, CTC_STATUS_SUCCESS) << "CTC Error: " << ctcGetStatusString(status);
-	vector<float> workspace_(workspace_alloc_bytes_);
+	vector<float> workspace_2(workspace_alloc_bytes_);
 
 	
-	float* costs = new float[lens.size()];
 	status = CTC::compute_ctc_loss_cpu<float>(activations,
 		0,
 		flat_labels.data(),
@@ -1214,10 +1215,43 @@ string Classifier::GetCTCLoss_wcs(float*activations, int timesteps, int alphabet
 		input_lens.data(),
 		alphabet_size,
 		lens.size(),
-		costs,
-		workspace_.data(),
+		costs.data(),
+		workspace_2.data(),
 		options
 		);
+#else
+	options.loc = CTC_GPU;
+	cudaStream_t stream;
+	CHECK_EQ(cudaStreamCreate(&stream), CUDA_SUCCESS);
+	options.stream = stream;
+
+	ctcStatus_t status = CTC::get_workspace_size<float>(lens.data(),
+		input_lens.data(),
+		alphabet_size,
+		(int)(lens.size()),
+		options,
+		&workspace_alloc_bytes_);
+	CHECK_EQ(status, CTC_STATUS_SUCCESS) << "CTC Error: " << CTC::ctcGetStatusString(status);
+
+	if (!workspace_ || workspace_->size() < workspace_alloc_bytes_) {
+		workspace_.reset(new SyncedMemory(workspace_alloc_bytes_));
+	}
+
+	status = CTC::compute_ctc_loss_gpu<float>(activations,
+		0,
+		flat_labels.data(),
+		lens.data(),
+		input_lens.data(),
+		alphabet_size,
+		lens.size(),
+		costs.data(),
+		workspace_->mutable_gpu_data(),
+		options
+	);
+
+	CHECK_EQ(status, CTC_STATUS_SUCCESS) << "CTC Error: " << CTC::ctcGetStatusString(status);
+#endif
+
 	float min_ctc_loss = 1000;
 	int min_ctc_idx = -1;
 	for (size_t i = 0; i < lens.size(); i++) {

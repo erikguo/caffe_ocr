@@ -326,6 +326,12 @@
     <ClInclude Include="..\..\include\caffe\util\math_functions.hpp">
       <Filter>caffe\includes</Filter>
     </ClInclude>
+    <ClInclude Include="bktree.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="levenshtein.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="classification.cpp">
@@ -666,6 +672,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\caffe\layers\DenseBlock_layer.cpp">
       <Filter>caffe\layers</Filter>
+    </ClCompile>
+    <ClCompile Include="bktree.cpp">
+      <Filter>src</Filter>
+    </ClCompile>
+    <ClCompile Include="levenshtein.cpp">
+      <Filter>src</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
